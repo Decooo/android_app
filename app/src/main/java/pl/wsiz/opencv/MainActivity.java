@@ -1,7 +1,11 @@
 package pl.wsiz.opencv;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
@@ -38,6 +42,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        permissionCamera();
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
@@ -69,4 +74,18 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         return inputFrame.rgba();
     }
 
+    public void permissionCamera() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.CAMERA)) {
+
+            } else {
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA},
+                        1);
+            }
+        }
+    }
 }

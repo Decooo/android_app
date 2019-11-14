@@ -3,6 +3,7 @@ package pl.wsiz.opencv;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -14,10 +15,8 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -38,7 +37,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             }
         }
     };
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,7 +73,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 //        Core.flip(mRGBA.t(), mRGBAT, 1);
 //        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
 //        return mRGBAT;
-        return  inputFrame.rgba();
+        return inputFrame.rgba();
     }
 
     @Override
@@ -111,18 +109,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     public void permissionCamera() {
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.CAMERA)) {
-
-            } else {
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.CAMERA},
-                        1);
-            }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.CAMERA}, 1);
         }
     }
-
 }

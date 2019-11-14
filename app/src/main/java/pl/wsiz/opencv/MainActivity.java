@@ -44,11 +44,17 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     public void onCreate(Bundle savedInstanceState) {
         permissionCamera();
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        addWindowFlags();
         setContentView(R.layout.activity_main);
         javaCameraView = (JavaCameraView) findViewById(R.id.my_camera_view);
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
         javaCameraView.setCvCameraViewListener(MainActivity.this);
+    }
+
+    private void addWindowFlags() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
 
@@ -64,11 +70,12 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        mRGBA = inputFrame.rgba();
-        mRGBAT = mRGBA.t();
-        Core.flip(mRGBA.t(), mRGBAT, 1);
-        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
-        return mRGBAT;
+//        mRGBA = inputFrame.rgba();
+//        mRGBAT = mRGBA.t();
+//        Core.flip(mRGBA.t(), mRGBAT, 1);
+//        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
+//        return mRGBAT;
+        return  inputFrame.rgba();
     }
 
     @Override
@@ -99,7 +106,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             baseLoaderCallback.onManagerConnected(BaseLoaderCallback.SUCCESS);
         } else {
             System.out.println("OpencCV is not configuered successfully");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, baseLoaderCallback);
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, baseLoaderCallback);
         }
     }
 

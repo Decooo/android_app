@@ -2,7 +2,19 @@
     "logs": [
         {
             "outputFile": "D:\\Android\\openCV\\openCVLibrary343\\build\\intermediates\\incremental\\mergeDebugAndroidTestResources\\merged.dir\\values\\values.xml",
-            "map": []
+            "map": [
+                {
+                    "source": "D:\\Android\\openCV\\openCVLibrary343\\build\\intermediates\\packaged_res\\debug\\values\\values.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "9",
+                        "endColumns": "24",
+                        "endOffsets": "361"
+                    }
+                }
+            ]
         }
     ]
 }

@@ -2,8 +2,8 @@ package pl.wsiz.opencv;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -15,19 +15,65 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.CvType;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
-    Mat mRGBA, mRGBAT;
-    private JavaCameraView javaCameraView;
+    public static final int JAVA_DETECTOR = 0;
+    private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+
+    private Mat mRgba;
+    private Mat mGray;
+    private CascadeClassifier mJavaDetector;
+
+    private String[] mDetectorName;
+
+    private float mRelativeFaceSize = 0.2f;
+    private int mAbsoluteFaceSize = 0;
+
+    private CameraBridgeViewBase mOpenCvCameraView;
     private BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(MainActivity.this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS: {
-                    javaCameraView.enableView();
+                    // System.loadLibrary("detection_based_tracker");
+                    try {
+                        InputStream is = getResources().openRawResource(R.raw.haarcascade_frontalface_default);
+                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                        File mCascadeFile = new File(cascadeDir, "haarcascade_frontalface_default.xml");
+                        FileOutputStream os = new FileOutputStream(mCascadeFile);
+
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, bytesRead);
+                        }
+                        is.close();
+                        os.close();
+
+                        mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+                        if (mJavaDetector.empty()) {
+                            mJavaDetector = null;
+                        }
+                        //         cascadeDir.delete();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    mOpenCvCameraView.enableView();
                 }
                 break;
                 default: {
@@ -38,15 +84,20 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         }
     };
 
+    public MainActivity() {
+        mDetectorName = new String[1];
+        mDetectorName[JAVA_DETECTOR] = "JAVA";
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         permissionCamera();
         super.onCreate(savedInstanceState);
         addWindowFlags();
         setContentView(R.layout.activity_main);
-        javaCameraView = (JavaCameraView) findViewById(R.id.my_camera_view);
-        javaCameraView.setVisibility(SurfaceView.VISIBLE);
-        javaCameraView.setCvCameraViewListener(MainActivity.this);
+        mOpenCvCameraView = (JavaCameraView) findViewById(R.id.my_camera_view);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+        mOpenCvCameraView.setCvCameraViewListener(MainActivity.this);
     }
 
     private void addWindowFlags() {
@@ -55,25 +106,42 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
-
-    @Override
     public void onCameraViewStarted(int width, int height) {
-        mRGBA = new Mat(height, width, CvType.CV_8UC4);
+        mGray = new Mat();
+        mRgba = new Mat();
     }
 
-    @Override
     public void onCameraViewStopped() {
-        mRGBA.release();
+        mGray.release();
+        mRgba.release();
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-//        mRGBA = inputFrame.rgba();
-//        mRGBAT = mRGBA.t();
-//        Core.flip(mRGBA.t(), mRGBAT, 1);
-//        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
-//        return mRGBAT;
-        return inputFrame.rgba();
+
+        mRgba = inputFrame.rgba();
+        mGray = inputFrame.gray();
+
+        Core.flip(mRgba, mGray, -1);
+
+        if (mAbsoluteFaceSize == 0) {
+            int height = mGray.rows();
+            if (Math.round(height * mRelativeFaceSize) > 0) {
+                mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
+            }
+        }
+
+        MatOfRect faces = new MatOfRect();
+
+        if (mJavaDetector != null)
+            mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2,
+                    new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
+
+        Rect[] facesArray = faces.toArray();
+        for (Rect aFacesArray : facesArray)
+            Imgproc.rectangle(mRgba, aFacesArray.tl(), aFacesArray.br(), FACE_RECT_COLOR, 3);
+
+        return mRgba;
     }
 
     @Override
@@ -84,15 +152,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     @Override
     public void onPause() {
         super.onPause();
-        if (javaCameraView != null)
-            javaCameraView.disableView();
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (javaCameraView != null)
-            javaCameraView.disableView();
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
     }
 
     @Override

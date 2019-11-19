@@ -15,7 +15,6 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
@@ -28,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -49,7 +49,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         public void onManagerConnected(int status) {
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS: {
-                    // System.loadLibrary("detection_based_tracker");
                     try {
                         InputStream is = getResources().openRawResource(R.raw.haarcascade_frontalface_default);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
@@ -68,7 +67,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                         if (mJavaDetector.empty()) {
                             mJavaDetector = null;
                         }
-                        //         cascadeDir.delete();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -118,11 +116,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
-
-        Core.flip(mRgba, mGray, -1);
 
         if (mAbsoluteFaceSize == 0) {
             int height = mGray.rows();
@@ -137,9 +132,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2,
                     new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
 
-        Rect[] facesArray = faces.toArray();
-        for (Rect aFacesArray : facesArray)
-            Imgproc.rectangle(mRgba, aFacesArray.tl(), aFacesArray.br(), FACE_RECT_COLOR, 3);
+        List<Rect> findFaces = faces.toList();
+        findFaces.forEach(f -> Imgproc.rectangle(mRgba, f.tl(), f.br(), FACE_RECT_COLOR, 3));
 
         return mRgba;
     }
@@ -172,7 +166,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             baseLoaderCallback.onManagerConnected(BaseLoaderCallback.SUCCESS);
         } else {
             System.out.println("OpencCV is not configuered successfully");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, baseLoaderCallback);
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, baseLoaderCallback);
         }
     }
 

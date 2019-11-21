@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context="pl.wsiz.opencv.MainActivity">
 
-    <org.opencv.android.JavaCameraView
+    <pl.wsiz.opencv.CameraOperation
         android:id="@+id/my_camera_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"

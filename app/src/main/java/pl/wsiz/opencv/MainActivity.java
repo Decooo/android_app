@@ -8,11 +8,11 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
@@ -20,6 +20,7 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -27,9 +28,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnClickListener{
 
     public static final int JAVA_DETECTOR = 0;
     private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
@@ -43,7 +46,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private float mRelativeFaceSize = 0.2f;
     private int mAbsoluteFaceSize = 0;
 
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private CameraOperation mOpenCvCameraView;
     private BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(MainActivity.this) {
         @Override
         public void onManagerConnected(int status) {
@@ -72,6 +75,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                     }
 
                     mOpenCvCameraView.enableView();
+                    mOpenCvCameraView.setOnClickListener(MainActivity.this);
                 }
                 break;
                 default: {
@@ -93,7 +97,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onCreate(savedInstanceState);
         addWindowFlags();
         setContentView(R.layout.activity_main);
-        mOpenCvCameraView = (JavaCameraView) findViewById(R.id.my_camera_view);
+        mOpenCvCameraView = (CameraOperation) findViewById(R.id.my_camera_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(MainActivity.this);
     }
@@ -175,5 +179,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.CAMERA}, 1);
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+        System.out.println("TOUCH");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        String currentDateandTime = sdf.format(new Date());
+        String fileName = "Image_"+currentDateandTime + ".jpg";
+        mOpenCvCameraView.takePicture(fileName);
+        //Imgcodecs.imwrite("/data/user/0/pl.wsiz.opencv/files/" + fileName,mRgba);
     }
 }

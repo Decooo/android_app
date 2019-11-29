@@ -26,6 +26,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="pl.wsiz.opencv.SpeechRecognizeService"
+            android:enabled="true" />
     </application>
 
     <uses-feature
@@ -40,4 +43,5 @@
     <uses-feature
         android:name="android.hardware.camera.front.autofocus"
         android:required="false" />
+
 </manifest>

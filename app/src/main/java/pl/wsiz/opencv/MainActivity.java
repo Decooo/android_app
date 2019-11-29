@@ -104,6 +104,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         mOpenCvCameraView = (CameraOperation) findViewById(R.id.my_camera_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(MainActivity.this);
+
+        Intent serviceIntent = new Intent(this, SpeechRecognizeService.class);
+        startService(serviceIntent);
     }
 
     private void addWindowFlags() {
@@ -193,10 +196,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         String fileName = "Image_" + currentDateandTime + ".jpg";
         mOpenCvCameraView.takePicture(fileName);
 
-        speachRecognizer();
+        speechRecognizer();
     }
 
-    private void speachRecognizer() {
+    private void speechRecognizer() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH);

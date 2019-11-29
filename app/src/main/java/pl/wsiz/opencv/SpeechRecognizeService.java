@@ -10,6 +10,7 @@ import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
@@ -19,6 +20,7 @@ import java.util.Locale;
 public class SpeechRecognizeService extends Service implements RecognitionListener {
 
     private SpeechRecognizer speechRecognizer;
+    private Intent intent;
 
     @Override
     public IBinder onBind(Intent arg0) {
@@ -27,11 +29,11 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
 
     @Override
     public void onCreate() {
-        Toast.makeText(this, "Active speech recognition", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Active speech recognition", Toast.LENGTH_SHORT).show();
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
         speechRecognizer.setRecognitionListener(this);
 
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH);
 
@@ -40,7 +42,7 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
 
     @Override
     public void onDestroy() {
-        Toast.makeText(this, "Disabled speech recognition", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Disabled speech recognition", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -61,6 +63,7 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
     @Override
     public void onError(int error) {
         Log.d("Speech", "onError");
+        speechRecognizer.startListening(intent);
     }
 
     @Override
@@ -80,11 +83,21 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
 
     @Override
     public void onResults(Bundle results) {
-        Toast.makeText(this,"Hello world", Toast.LENGTH_LONG).show();
+        Log.d("Speech", "onResults");
+        ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        SpeechIntentRecognizer speechIntentRecognizer = new SpeechIntentRecognizer();
+
+        int intFound = speechIntentRecognizer.getIntentFromResult(data);
+        if (intFound == 0)
+            Toast.makeText(this, "Rozpoznałem!!!", Toast.LENGTH_LONG).show();
+        else
+            Toast.makeText(this, "Sorry, I didn't catch that! Please try again", Toast.LENGTH_LONG).show();
+
+        speechRecognizer.startListening(intent);
     }
 
     @Override
     public void onRmsChanged(float rmsdB) {
-        Log.d("Speech", "onRmsChanged");
+        Log.d("Rms", "onRmsChanged");
     }
 }

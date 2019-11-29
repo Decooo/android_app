@@ -159,6 +159,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        stopService(new Intent(this, SpeechRecognizeService.class));
     }
 
     @Override
@@ -166,6 +167,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        stopService(new Intent(this, SpeechRecognizeService.class));
     }
 
     @Override
@@ -179,6 +181,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             System.out.println("OpencCV is not configuered successfully");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, baseLoaderCallback);
         }
+        startService(new Intent(this, SpeechRecognizeService.class));
     }
 
     public void permissionCamera() {
@@ -196,7 +199,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         String fileName = "Image_" + currentDateandTime + ".jpg";
         mOpenCvCameraView.takePicture(fileName);
 
-        speechRecognizer();
+      //  speechRecognizer();
     }
 
     private void speechRecognizer() {

@@ -160,10 +160,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         return mRgba;
     }
 
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-
-    }
+//    @Override
+//    public void onPointerCaptureChanged(boolean hasCapture) {
+//
+//    }
 
     @Override
     public void onPause() {

@@ -2,18 +2,19 @@ package pl.wsiz.opencv;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -34,13 +35,14 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnClickListener {
 
+    public static final String RECEIVER_INTENT = "RECEIVER_INTENT";
+    public static final String RECEIVER_MESSAGE = "RECEIVER_MESSAGE";
     public static final int JAVA_DETECTOR = 0;
     private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
-
+    private BroadcastReceiver mBroadcastReceiver;
     private Mat mRgba;
     private Mat mGray;
     private CascadeClassifier mJavaDetector;
@@ -107,6 +109,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         Intent serviceIntent = new Intent(this, SpeechRecognizeService.class);
         startService(serviceIntent);
+
+        mBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String message = intent.getStringExtra(RECEIVER_MESSAGE);
+                if (message.equalsIgnoreCase("takePhoto"))
+                    takePhoto();
+            }
+        };
     }
 
     private void addWindowFlags() {
@@ -175,10 +186,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onResume();
 
         if (OpenCVLoader.initDebug()) {
-            System.out.println("OpencCV is configuered successfully");
+            Log.d("openCV", "OpencCV is configuered successfully");
             baseLoaderCallback.onManagerConnected(BaseLoaderCallback.SUCCESS);
         } else {
-            System.out.println("OpencCV is not configuered successfully");
+            Log.d("openCV", "OpencCV is not configuered successfully");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, baseLoaderCallback);
         }
         startService(new Intent(this, SpeechRecognizeService.class));
@@ -192,46 +203,31 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     @Override
+    protected void onStop() {
+        stopService(new Intent(this, SpeechRecognizeService.class));
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+        super.onStop();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startService(new Intent(this, SpeechRecognizeService.class));
+        LocalBroadcastManager.getInstance(this).registerReceiver((mBroadcastReceiver),
+                new IntentFilter(RECEIVER_INTENT)
+        );
+    }
+
+    @Override
     public void onClick(View v) {
-        System.out.println("TOUCH");
+        takePhoto();
+    }
+
+    public void takePhoto() {
+        Log.i("photo", "take photo");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
         String currentDateandTime = sdf.format(new Date());
         String fileName = "Image_" + currentDateandTime + ".jpg";
         mOpenCvCameraView.takePicture(fileName);
-
-      //  speechRecognizer();
-    }
-
-    private void speechRecognizer() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH);
-        startActivityForResult(intent, 1);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK && data != null) {
-            SpeechIntentRecognizer speechRecognizer = new SpeechIntentRecognizer();
-            switch (requestCode) {
-                case 1:
-                    int intFound = speechRecognizer.getIntentFromResult(data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS));
-                    if (intFound == 0)
-                        showToast("Success!");
-                    else
-                        showToast("Sorry, I didn't catch that! Please try again");
-                    break;
-            }
-        } else
-            showToast("Failed to recognize speech!");
-    }
-
-    private void showToast(String msg) {
-        Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
-        View toastView = toast.getView();
-        toast.setView(toastView);
-        toast.show();
     }
 }

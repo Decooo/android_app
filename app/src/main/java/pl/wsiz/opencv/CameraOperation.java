@@ -2,6 +2,7 @@ package pl.wsiz.opencv;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import org.opencv.android.JavaCameraView;
 
@@ -22,7 +23,7 @@ public class CameraOperation extends JavaCameraView implements android.hardware.
     }
 
     public void takePicture(final String fileName) {
-        System.out.println("Taking picture");
+        Log.d("photo", "Taking picture");
         this.pictureFileName = fileName;
         mCamera.setPreviewCallback(null);
         mCamera.takePicture(null, null, this);
@@ -30,16 +31,17 @@ public class CameraOperation extends JavaCameraView implements android.hardware.
 
     @Override
     public void onPictureTaken(byte[] data, android.hardware.Camera camera) {
-        System.out.println("Saving picture");
+        Log.d("photo", "Saving picture");
         mCamera.startPreview();
         mCamera.setPreviewCallback(this);
 
         try {
-            FileOutputStream fos = new FileOutputStream(context.getFilesDir().getPath() + "/" + pictureFileName);
+         //   FileOutputStream fos = new FileOutputStream(context.getFilesDir().getPath() + "/" + pictureFileName);
+            FileOutputStream fos = new FileOutputStream("/storage/emulated/0/Pictures/openCV/" + pictureFileName);
             fos.write(data);
             fos.close();
         } catch (java.io.IOException e) {
-            System.out.println("Error while taking the picture");
+            Log.e("photo", "Error while taking the picture");
         }
     }
 }

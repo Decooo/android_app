@@ -7,6 +7,7 @@ import android.os.IBinder;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,7 +30,7 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
 
     @Override
     public void onCreate() {
-        Toast.makeText(this, "Active speech recognition", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Aktywowano rozpoznawanie mowy", Toast.LENGTH_SHORT).show();
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
         speechRecognizer.setRecognitionListener(this);
 
@@ -42,7 +43,8 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
 
     @Override
     public void onDestroy() {
-        Toast.makeText(this, "Disabled speech recognition", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Wyłączono rozpoznawanie mowy", Toast.LENGTH_SHORT).show();
+        speechRecognizer.stopListening();
     }
 
     @Override
@@ -88,10 +90,13 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
         SpeechIntentRecognizer speechIntentRecognizer = new SpeechIntentRecognizer();
 
         int intFound = speechIntentRecognizer.getIntentFromResult(data);
-        if (intFound == 0)
-            Toast.makeText(this, "Rozpoznałem!!!", Toast.LENGTH_LONG).show();
-        else
-            Toast.makeText(this, "Sorry, I didn't catch that! Please try again", Toast.LENGTH_LONG).show();
+        if (intFound == 0) {
+            Intent intent = new Intent(MainActivity.RECEIVER_INTENT);
+            intent.putExtra(MainActivity.RECEIVER_MESSAGE, "takePhoto");
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            Toast.makeText(this, "Zrobiono zdjęcie", Toast.LENGTH_LONG).show();
+        } else
+            Toast.makeText(this, "Tekst nie rozpoznany! Spróbuj ponownie", Toast.LENGTH_LONG).show();
 
         speechRecognizer.startListening(intent);
     }
@@ -100,4 +105,5 @@ public class SpeechRecognizeService extends Service implements RecognitionListen
     public void onRmsChanged(float rmsdB) {
         Log.d("Rms", "onRmsChanged");
     }
+
 }
